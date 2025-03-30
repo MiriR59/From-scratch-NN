@@ -63,7 +63,7 @@ n_input = 2     # Input features
 n_one = 10      # neurons in 1st layer
 n_out = 1       # outputs
 alfa = 1e-2     # learning rate
-epochs = 100000
+epochs = 150000
 
 # XOR problem input
 input_array = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
@@ -111,5 +111,22 @@ for epoch in range(epochs):
         w_out, b_out = grad_desc(alfa, w_out, b_out, delta_output_w, delta_output_b)
         w_one, b_one = grad_desc(alfa, w_one, b_one, delta_hidden_w, delta_hidden_b)
         
-    if epoch % 500 == 0:
+    if epoch % 1000 == 0:
         print(f'Epoch {epoch}, Loss: {total_loss}')
+        
+final_out = np. zeros((1, 4))
+for i in range(input_array.shape[0]):
+    x = input_array[i]
+    y_correct = output_array[i]
+
+    # --- Forward pass ---
+    n_one_out = np.zeros((n_one, 1))
+    for j in range(n_one):
+        n_one_output = x[0] * w_one[j, 0] + x[1] * w_one[j, 1] + b_one[j]
+        n_one_out[j, 0] = sigmoid(n_one_output)
+
+    final_output = np.dot(w_out.T, n_one_out) + b_out
+    final_out[:, i] = sigmoid(final_output)
+    
+print(output_array.T)
+print(final_out)
