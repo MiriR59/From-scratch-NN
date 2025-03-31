@@ -55,36 +55,97 @@ def grad_desc(alfa, w, b, dL_dw, dL_db):
     b_updated = b - alfa * dL_db
     return w_updated, b_updated
 
+# --- NN parameters initialization ---
+def NN_init(network):
+    '''
+    network - architecture list defined beelow
+    '''
+    weights = []
+    biases = []
+    for i in range(len(network)-1):
+        w = (np.random.rand(network[i+1], network[i]) - 0.5) * 2
+        weights.append(w)
+        b = (np.random.rand(network[i+1], 1) - 0.5) * 2
+        biases.append(b)
+    return weights, biases
 
-# --- All the inputs ---
+def forward_pass(batch, network, w, b):
+    '''
+    batch - matrix with single datapass in every row n_columns = network[0]
+    network - architercture defined below
+    w - list of weights
+    b - list of biases
+    '''   
+    out_pre = []
+    out_post = []
+    for i in range(len(network)-1):
+        output_pre = np.zeros([network[i+1], 1])
+        output_post = np.zeros_like(output_pre)
+        for k in range(network[i+1]):
+            output_pre[k] += b[i][k, 0]
+                
+            for j in range(network[i]):
+                if i == 0:
+                    output_pre[k] += batch[0, j] * w[i][k, j]                   
+                    
+                else:
+                    output_pre[k] += out_pre[i-1][j, 0] * w[i][k, j]
+                    
+            output_post[k] = sigmoid(output_pre[k])
+        out_pre.append(output_pre)
+        out_post.append(output_post)
+    return out_pre, out_post
+
+# --- Define architecture ---
+network = [2, 10, 10, 1]    # 2 inputs, HL with 10 neurons, HL with 10 neurons, 1 output
+
+w, b = NN_init(network)     # Initialize weights and biases
+
 n_input = 2     # Input features
 n_layers = 3    # Number of layers (inc output)
 n_one = 10      # Neurons in 1st layer
 n_two = 10      # Neurons in 2nd layer
 n_out = 1       # Outputs
 alfa = 1e-2     # Learning rate
-epochs = 150000 # Epochs
+epochs = 1 # Epochs
+
+# NN definition
+NN = np.zeros([n_layers, 1])
 
 # XOR problem input
-input_array = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+input_array = np.array([[1, 1], [0, 1], [1, 0], [0, 0]])
 output_array = np.array([[0], [1], [1], [0]])
-
 # Transpose inputs for matrix operations
 X = input_array.T
 y = output_array.T
 
-# Weights for 1st layer
-w_one = (np.random.rand(n_one, n_input) - 0.5) * 2
-# Weights for output layer
-w_out = (np.random.random((n_one, n_out)) - 0.5) * 2
-
-# Biases for 1st layer
-b_one = (np.random.random(n_one) - 0.5) * 2
-# Biases for output layer
-b_out = (np.random.random(n_out) - 0.5) * 2
-
 # Layer output storing
 n_one_out = np.zeros(n_one)
+
+
+# --- TESTOVANI ---
+for epoch in range(epochs):
+    total_loss = 0
+    
+    for l in range(input_array.shape[0]):
+        batch = input_array[l:l+1]
+        
+        # --- Forward pass ---
+        outpre, outpost = forward_pass(batch, network, w, b)
+        print('FORWARD PASS DONE')
+        
+        loss_c = loss(outpost[2], output_array[l])
+        total_loss += loss_c
+
+        # --- Backpropagation ---
+        
+        # --- Gradient descent ---
+        
+    if epoch % 1000 == 0:
+        print(f'Epoch {epoch}, Loss: {total_loss}')        
+
+
+
 
 for epoch in range(epochs):
     total_loss = 0
@@ -111,9 +172,6 @@ for epoch in range(epochs):
         w_out, b_out = grad_desc(alfa, w_out, b_out, delta_output_w, delta_output_b)
         w_one, b_one = grad_desc(alfa, w_one, b_one, delta_hidden_w, delta_hidden_b)
         
-    if epoch % 1000 == 0:
-        print(f'Epoch {epoch}, Loss: {total_loss}')
-
 # --- Results control ---
 final_out = np. zeros((1, 4))
 for i in range(input_array.shape[0]):
@@ -131,5 +189,3 @@ for i in range(input_array.shape[0]):
 
 print(output_array.T)
 print(final_out)
-
-test
