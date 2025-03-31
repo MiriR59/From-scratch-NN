@@ -1,19 +1,17 @@
 import numpy as np
 
-# --- NN from zero ---
-# 2 input - 10 neurons - 1 output
-
+## --- NN from scratch --- ##
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-# Binary cross-entropy loss
+# --- Binary cross-entropy loss ---
 def loss(x, y):
     '''
     x = predicted output
     y = correct answer
     '''
     fix = 1e-9
-    x = np.clip(x, fix, 1 - fix)  # Ensure we never get log 0
+    x = np.clip(x, fix, 1 - fix)  # Ensure we dont get log 0
     return -(y * np.log(x) + (1 - y) * np.log(1 - x))
 
 # --- Backpropagation ---
@@ -39,7 +37,7 @@ def backpropagation_hidden (x, y, w_out, n, X):
     '''
     delta_out = (x - y) * x * (1 - x)
     delta_hidden = (delta_out * w_out) * (n * (1 - n))
-    
+  
     dL_dw_hid = (X @ delta_hidden.T).T
     dL_db_hid = np.sum(delta_hidden, axis=0)
     return dL_dw_hid, dL_db_hid
@@ -58,12 +56,14 @@ def grad_desc(alfa, w, b, dL_dw, dL_db):
     return w_updated, b_updated
 
 
-# inputs
+# --- All the inputs ---
 n_input = 2     # Input features
-n_one = 10      # neurons in 1st layer
-n_out = 1       # outputs
-alfa = 1e-2     # learning rate
-epochs = 150000
+n_layers = 3    # Number of layers (inc output)
+n_one = 10      # Neurons in 1st layer
+n_two = 10      # Neurons in 2nd layer
+n_out = 1       # Outputs
+alfa = 1e-2     # Learning rate
+epochs = 150000 # Epochs
 
 # XOR problem input
 input_array = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
@@ -92,7 +92,7 @@ for epoch in range(epochs):
     for i in range(input_array.shape[0]):
         x = input_array[i]
         y_correct = output_array[i]
-
+        
         # --- Forward pass ---
         n_one_out = np.zeros((n_one, 1))
         for j in range(n_one):
@@ -113,7 +113,8 @@ for epoch in range(epochs):
         
     if epoch % 1000 == 0:
         print(f'Epoch {epoch}, Loss: {total_loss}')
-        
+
+# --- Results control ---
 final_out = np. zeros((1, 4))
 for i in range(input_array.shape[0]):
     x = input_array[i]
@@ -127,6 +128,6 @@ for i in range(input_array.shape[0]):
 
     final_output = np.dot(w_out.T, n_one_out) + b_out
     final_out[:, i] = sigmoid(final_output)
-    
+
 print(output_array.T)
 print(final_out)
