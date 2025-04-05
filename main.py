@@ -12,7 +12,7 @@ def loss(x, y):
     '''
     fix = 1e-9
     x = np.clip(x, fix, 1 - fix)  # Ensure we dont get log 0
-    return -(y * np.log(x) + (1 - y) * np.log(1 - x))
+    return np.mean(-(y * np.log(x) + (1 - y) * np.log(1 - x)))
 
 # --- Gradient descent in output---
 def gradient_descent(alfa, w, b, dw, db):
@@ -81,47 +81,43 @@ def backpropagation(true, w, output, network):
     return delta_w, delta_b
 
 # --- Define architecture ---
-network = [2, 10, 1]    # Inputs, hidden layers, output
+network = [2, 10, 10, 1]    # Inputs, hidden layers, output
 w, b = NN_init(network) # Initialize weights and biases
 alfa = 1e-2             # Learning rate
-epochs = 100000
-batch_size = 3
+epochs = 200000
+batch_size = 4
 
 # --- XOR problem ---
-input_array = np.array([[1, 1], [0, 1], [1, 0], [0, 0]])    # Dataset
-true = np.array([[0], [1], [1], [0]])                       # Ground truth     
+dataset = np.array([[1, 1], [0, 1], [1, 0], [0, 0]])    # Dataset
+true = np.array([[0], [1], [1], [0]])                   # Ground truth     
 
-# --- Test loop ---
-for l in range(input_array.shape[0] // batch_size):
-    batch = input_array[(l):(l+batch_size), :]
-    batch_true = true[(l):(l+batch_size), :].T
-    
-    output = forward_pass(batch, network, w, b)
-    
-    dw, db = backpropagation(batch_true, w, output, network)
 # --- Main loop ---
+losses = []
 for epoch in range(epochs):
     total_loss = 0
     
-    for l in range(input_array.shape[0] // batch_size):
-        batch = input_array[(2*l):(2*l+2), :]
-        
-        out_post = forward_pass(batch, network, w, b)
-        
-        loss_c = loss(out_post[-1], true[l]) / input_array.shape[0]
-        total_loss += loss_c
-
-        dw, db = backpropagation(true[l], w, out_post, network)
-        
+    for l in range(dataset.shape[0] // batch_size):
+        batch = dataset[(l):(l+batch_size), :]
+        batch_true = true[(l):(l+batch_size), :].T
+    
+        output = forward_pass(batch, network, w, b)
+    
+        dw, db = backpropagation(batch_true, w, output, network)
+    
         w, b = gradient_descent(alfa, w, b, dw, db)
-
-    if epoch % 500 == 0:
-        print(f'Epoch {epoch}, Loss: {total_loss}')         
+    
+        loss_c = loss(output[-1], batch_true) / batch_size
+        total_loss += loss_c
+        
+    losses.append(total_loss)
+    
+    if epoch % 1000 == 0:
+        print(f'Epoch {epoch}, Loss: {total_loss}')
 
 # --- Results control ---
 final = []
-for i in range(input_array.shape[0]):
-    batch = input_array[i:i+1]
+for i in range(dataset.shape[0]):
+    batch = dataset[i:i+1]
     final_post = forward_pass(batch, network, w, b)
     final.insert(0, final_post[-1][0, 0])
 
