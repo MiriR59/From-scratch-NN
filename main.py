@@ -1,6 +1,81 @@
 import numpy as np
 
 ## --- NN from scratch --- ##
+
+# --- Activation class definitions ---
+class Activation:
+    def forward(self, x):
+        raise NotImplementedError()
+        
+    def backward(self, x):
+        raise NotImplementedError()
+    
+class sigmoid(Activation):
+    def forward(self, x):
+        self.out = 1 / (1 + np.exp(-x))
+        return self.out
+    
+    def backward(self, x):
+        return self.out * (1 - self.out)
+    
+class ReLU(Activation):
+    def forward(self, x):
+        self.out = np.maximum(0, x)
+        return self.out
+    
+    def backward(self, x):
+        return np.where(self.out > 0, 1, 0)
+    
+class tanh(Activation):
+    def forward(self, x):
+        self.out = np.tanh(x)
+        return self.out
+    
+    def backward(self, x):
+        return 1 - self.out ** 2
+
+class Swish(Activation):
+    def forward(self, x):
+        self.out = x / (1 + np.exp(-x))
+        return self.out
+    
+    def backward(self, x):
+        return 1 / (1 + np.exp(-x)) + self.out * (1 - 1 / (1 + np.exp(-x)))
+
+# --- Loss class definitions ---
+class Loss:
+    def forward(self, x_pred, x_true):
+        raise NotImplementedError()
+        
+    def backward(self, x_pred, x_true):
+        raise NotImplementedError()
+        
+class BCE(Loss):
+    def forward(self, x_pred, x_true):
+        fix = 1e-10
+        x_pred = np.clip(x_pred, fix, 1 - fix)
+        self.loss = np.mean(-(x_true * np.log(x_pred) + (1 - x_true) * np.log(1 - x_pred)))
+        return self.loss
+        
+    def backward(self, x_pred, x_true):
+        return (x_pred - x_true) / (x_pred * (1 - x_pred))
+    
+class MSE(Loss):
+    def forward(self, x_pred, x_true):
+        self.loss = np.mean((x_pred - x_true) ** 2)
+        return self.loss
+    
+    def backward(self, x_pred, x_true):
+        return 2 * (x_pred - x_true) / len(x_pred)          # Check len(x_pred) logic for batching
+    
+class CCE(Loss):
+    def forward(self, x_pred, x_true):
+        self.loss = - np.sum(x_true * np.log(x_pred))
+        return self.loss
+    def backward(self, x_pred, x_true):
+        return (x_pred - x_true) / (x_pred * (1 - x_pred))
+                
+                
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
@@ -106,7 +181,7 @@ for epoch in range(epochs):
     
         w, b = gradient_descent(alfa, w, b, dw, db)
     
-        loss_c = loss(output[-1], batch_true) / batch_size
+        loss_c = loss(output[-1], batch_true)
         total_loss += loss_c
         
     losses.append(total_loss)
