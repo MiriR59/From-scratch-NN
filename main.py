@@ -103,12 +103,13 @@ class Dense(Layer):
         self.output = self.activation.forward(self.w @ self.input + self.b)
         return self.output
     
-    def backward(self, w_next, delta_next):
-        self.delta = w_next.T @ delta_next * self.activation.backward(self.output)      # Get first delta_next from delta_next = loss.backward(output, truth) and fake w_next with array of ones or smthng, or resolve last layer outside class in for loop
-        self.dw = self.delta @ self.input.T                                             # Check multiplication logic
-        self.db = np.sum(self.delta, axis=0)
+    def backward(self, w_next, delta):
+        self.delta = w_next.T @ delta * self.activation.backward(self.output)      # Get first delta_next from delta_next = loss.backward(output, truth) and fake w_next with array of ones or smthng, or resolve last layer outside class in for loop
+        self.dw = self.delta @ self.input.T                                        # Check multiplication logic
+        self.db = np.sum(self.delta, axis=1)
         return self.dw, self.db, self.delta, self.w
 
+# --- General NN definition ---
 class Neural_network:
     def __init__(self, loss_f, *layers):
         self.layers = list(layers)
@@ -126,9 +127,14 @@ class Neural_network:
         return self.loss_f.forward(x_pred, x_true)
     
     def backpropagation(self):
-        self.delta_next = self.loss_f.backward(self.x_pred, self.x_true)
-        for i in range():
-            self.delta = self.loss_f.backward() * self.layer[-1].activation.backward()
+        self.delta = self.loss_f.backward(self.x_pred, self.x_true)
+        for i in range(len(self.layers) - 1, -1, -1):
+            if i == len(self.layers) - 1:
+                self.layers[i].backward(np.ones_like(self.layers[i].b), self.delta)
+                
+            else:
+                self.delta =  (w[i].T @ self.delta) * self.loss_f.backward() * self.layer[i].activation.backward()
+        return
 
     # def update_weights
 
@@ -142,9 +148,11 @@ true = np.array([[0], [1], [1], [0]])
 
 initialize = Random()
 loss_function = BCE()
+
 input_layer = Dense(2, 10, sigmoid(), initialize)
 hidden_1 = Dense(10, 10, sigmoid(), initialize)
 output_layer = Dense(10, 1, sigmoid(), initialize)
+
 nn = Neural_network(BCE(), input_layer, hidden_1, output_layer)
 
 for epoch in range(epochs):
