@@ -1,7 +1,6 @@
 import numpy as np
 
 ## --- NN from scratch --- ##
-
 # --- Activation class definitions ---
 class Activation:
     def forward(self, x):
@@ -75,8 +74,123 @@ class CCE(Loss):
     def backward(self, x_pred, x_true):
         return (x_pred - x_true) / (x_pred * (1 - x_pred))
                 
-                
+# --- Initialisation class definitions ---
+class Initialisation:
+    def init(self, shape):
+        raise NotImplementedError()
+    
+class Random(Initialisation):
+    def init(self, inputs, neurons):
+        w = (np.random.rand(neurons, inputs) - 0.5) * 2
+        b = (np.random.rand(neurons, 1) - 0.5) * 2
+        return w, b 
+ 
+# --- Layer class definitions ---
+class Layer:
+    def forward(self, input):
+        raise NotImplementedError()
+
+    def backward(self, *args):
+        raise NotImplementedError()
+
+class Dense(Layer):
+    def __init__(self, inputs, neurons, activation, initialisation):
+        self.activation = activation
+        self.w, self.b = initialisation.init(inputs, neurons)
+    
+    def forward(self, input):
+        self.input = input
+        self.output = self.activation.forward(self.w @ self.input + self.b)
+        return self.output
+    
+    def backward(self, w_next, delta_next):
+        self.delta = w_next.T @ delta_next * self.activation.backward(self.output)      # Get first delta_next from delta_next = loss.backward(output, truth) and fake w_next with array of ones or smthng, or resolve last layer outside class in for loop
+        self.dw = self.delta @ self.input.T                                             # Check multiplication logic
+        self.db = np.sum(self.delta, axis=0)
+        return self.dw, self.db, self.delta, self.w
+
+class Neural_network:
+    def __init__(self, loss_f, *layers):
+        self.layers = list(layers)
+        self.loss_f = loss_f
+
+    def forward_pass(self, x):
+        self.x = x
+        for i in range(len(self.layers)):
+            self.x = self.layers[i].forward(self.x)
+        return self.x
+
+    def loss(self, x_pred, x_true):
+        self.x_pred = x_pred
+        self.x_true = x_true
+        return self.loss_f.forward(x_pred, x_true)
+    
+    def backpropagation(self):
+        self.delta_next = self.loss_f.backward(self.x_pred, self.x_true)
+        for i in range():
+            self.delta = self.loss_f.backward() * self.layer[-1].activation.backward()
+
+    # def update_weights
+
+# --- Test loop ---
+alfa = 1e-2
+epochs = 200000
+batch_size = 2
+# --- XOR problem ---
+dataset = np.array([[1, 1], [0, 1], [1, 0], [0, 0]])
+true = np.array([[0], [1], [1], [0]])
+
+initialize = Random()
+loss_function = BCE()
+input_layer = Dense(2, 10, sigmoid(), initialize)
+hidden_1 = Dense(10, 10, sigmoid(), initialize)
+output_layer = Dense(10, 1, sigmoid(), initialize)
+nn = Neural_network(BCE(), input_layer, hidden_1, output_layer)
+
+for epoch in range(epochs):
+    total_loss = 0
+
+    for l in range(dataset.shape[0] // batch_size):
+        batch = dataset[(l):(l+batch_size), :].T
+        batch_true = true[(l):(l+batch_size), :].T
+        x_pred = nn.forward_pass(batch)
+
+        loss_value = nn.loss(x_pred, batch_true)
+        total_loss += loss_value
+
+        nn.backpropagation()
+
+
+losses = []
+for epoch in range(epochs):
+    total_loss = 0
+    
+    for l in range(dataset.shape[0] // batch_size):
+        batch = dataset[(l):(l+batch_size), :].T
+        batch_true = true[(l):(l+batch_size), :].T
+        x_pred = forward_pass(batch)
+
+        loss = loss_function.forward(x_pred ,batch_true)
+
+        dw, db = backpropagation(batch_true, w, output, network)
+    
+        w, b = gradient_descent(alfa, w, b, dw, db)
+    
+        loss_c = loss(output[-1], batch_true)
+        total_loss += loss_c
+        
+    losses.append(total_loss)
+    
+    if epoch % 1000 == 0:
+        print(f'Epoch {epoch}, Loss: {total_loss}')
+
+
+
+
 def sigmoid(x):
+    '''
+    x = output before activation
+    '''
     return 1 / (1 + np.exp(-x))
 
 # --- Binary cross-entropy loss ---
