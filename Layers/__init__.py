@@ -1,5 +1,5 @@
 from .base_layer import Layer
-from .dense import dense
+from .dense import Dense
 
 from .base_initialisation import Initialisation
 from .he import He
