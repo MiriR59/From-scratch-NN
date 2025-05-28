@@ -22,7 +22,7 @@ class Neural_network:
         self.delta = self.loss_f.backward()
         for i in range(len(self.layers) - 1, -1, -1):
             if i == len(self.layers) - 1:
-                self.layers[i].backward(np.ones((self.delta.shape[0], self.delta.shape[0])), self.delta, self.regularization)
+                self.layers[i].backward(np.ones((self.delta.shape[1], self.delta.shape[1])), self.delta, self.regularization)
                 
             else:
                 self.layers[i].backward(self.layers[i+1].w, self.layers[i+1].delta, self.regularization)

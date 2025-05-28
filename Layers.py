@@ -1,4 +1,5 @@
 import numpy as np
+from Tokenizer import tokenizer
 
 class Layer:
     def __init__(self, *args):
@@ -21,25 +22,48 @@ class Dense(Layer):
     
     def forward(self, input):
         self.input = input
-        self.z = self.w @ self.input + self.b
+        self.z = self.input @ self.w + self.b
         self.output = self.activation.forward(self.z)
         return self.output
     
     def backward(self, w_next, delta_next, regularization):
-        self.delta = w_next.T @ delta_next * self.activation.backward()
-        self.dw = self.delta @ self.input.T + regularization.backward(self.w)
-        self.db = np.sum(self.delta, axis=1, keepdims=True)
+        self.delta = delta_next @ w_next.T * self.activation.backward()
+        self.dw = self.input.T @ self.delta + regularization.backward(self.w)
+        self.db = np.sum(self.delta, axis=0, keepdims=True)
         return self.dw, self.db, self.delta, self.w
+
+class Embedding(Layer):
+    def __init__(self, vocabulary_size, embedding_depth):
+        self.vocabulary_size = vocabulary_size
+        self.embedding_depth = embedding_depth
+        self.embedding_matrix = np.random.rand(self.vocabulary_size, self.embedding_depth)
+        
+    def forward(self, ID_input):
+        self.ID_input = ID_input
+        self.embedded = np.zeros((1, self.embedding_depth))
+        
+        for token in self.ID_input:
+            self.embedded = np.concatenate((self.embedded, self.embedding_matrix[token:token+1, :]), axis=0)
+            
+        return self.embedded[1:, :]
+        
+    def backward(self, w_next, delta_next, regularization):
+        self.gradient_matrix = np.zeros_like(self.embedding_matrix)
+        
+        for i, token in enumerate (self.ID_input):
+            self.embedded[token] += delta_next[i]               # CHECK LOGIC OF ADDING DELTA TO WHOLE ROW
+            
+        return self.gradient_matrix
 
 class Xavier(Initialisation):
     def init (self, type, inputs, neurons):
         'Type: uniform/normal'
         b = np.zeros((neurons, 1))
         if type == 'uniform':
-            w = (np.random.rand(neurons, inputs) - 0.5) * 2 * np.sqrt(6 / (inputs + neurons))
+            w = (np.random.rand(inputs, neurons) - 0.5) * 2 * np.sqrt(6 / (inputs + neurons))
 
         elif type == 'normal':
-            w = (np.random.randn(neurons, inputs)) * np.sqrt(2 / (inputs + neurons))
+            w = (np.random.randn(inputs, neurons)) * np.sqrt(2 / (inputs + neurons))
 
         else:
             print('Choose viable Initialisation type')
@@ -52,12 +76,12 @@ class He(Initialisation):
         self.neurons = neurons
 
         'Type: uniform/normal'
-        b = np.zeros((neurons, 1))
+        b = np.zeros((1, neurons))
         if type == 'uniform':
-            w = (np.random.rand(neurons, inputs) - 0.5) * 2 * np.sqrt(6 / inputs)
+            w = (np.random.rand(inputs, neurons) - 0.5) * 2 * np.sqrt(6 / inputs)
 
         elif type == 'normal':
-            w = (np.random.randn(neurons, inputs)) * np.sqrt(2 / inputs)
+            w = (np.random.randn(inputs, neurons)) * np.sqrt(2 / inputs)
 
         else:
             print('Choose viable Initialisation type')
@@ -66,6 +90,6 @@ class He(Initialisation):
     
 class Random(Initialisation):
     def init(self, inputs, neurons):
-        w = (np.random.rand(neurons, inputs) - 0.5) * 2
-        b = (np.random.rand(neurons, 1) - 0.5) * 2
+        w = (np.random.rand(inputs, neurons) - 0.5) * 2
+        b = (np.random.rand(1, neurons) - 0.5) * 2
         return w, b 
