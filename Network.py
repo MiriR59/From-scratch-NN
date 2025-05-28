@@ -29,3 +29,34 @@ class Neural_network:
 
     def optimize(self):
         self.optimizer.optimize(self.layers)
+        
+class Regularization:
+    def __init(self, *args):
+        raise NotImplementedError()
+        
+    def forward(self, layers):
+        raise NotImplementedError()
+        
+    def backward(self, *args):
+        raise NotImplementedError()
+        
+class L2(Regularization):
+    def __init__(self, lambd):
+        self.lambd = lambd
+        self.L2_loss = 0
+
+    def forward(self, layers):
+        for layer in layers:
+            self.L2_loss += np.sum(layer.w ** 2)
+
+        return self.L2_loss * self.lambd
+    
+    def backward(self, w):
+        return 2 * self.lambd * w
+    
+class Null:
+    def forward(self, layers):
+        return 0
+    
+    def backward(self, w):
+        return 0

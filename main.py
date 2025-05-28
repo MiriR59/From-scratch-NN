@@ -7,7 +7,7 @@ from Optimization import ADAM, gradient_descent, LR_cosine_annealing, LR_decay, 
     
 # --- Test loop ---
 alfa = 1e-2
-epochs = 10000
+epochs = 100
 batch_size = 2
 # --- XOR problem ---
 dataset = np.array([[1, 1], [0, 1], [1, 0], [0, 0]])

@@ -40,3 +40,48 @@ class ADAM:
             layer.b -= self.alfa * self.m_b_cor / (np.sqrt(self.v_b_cor) + self.epsilon)
 
         self.t += 1
+        
+class gradient_descent:
+    def __init__(self, alfa):
+        self.alfa = alfa
+        
+    def optimize(self, layers):
+        for layer in layers:
+            layer.w -= self.alfa * layer.dw
+            layer.b -= self.alfa * layer.db
+
+class Scheduler:
+    def __init__(self, optimizer, **kwargs):
+        self.t = 0
+        self.optimizer = optimizer
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+    
+    def step(self):
+        self.update()
+        self.t += 1
+        
+    def update(self):
+        raise NotImplementedError()
+        
+class LR_exponential(Scheduler):
+    def __init__(self, optimizer, decay_rate):
+        super().__init__(optimizer, decay_rate=decay_rate, alfa=optimizer.alfa)
+
+    def update(self):
+        self.optimizer.alfa = self.alfa * (self.decay_rate ** self.t)
+        
+class LR_cosine_annealing(Scheduler):
+    def __init__(self, optimizer, T, min_alfa, max_alfa):
+        super().__init__(optimizer, T=T, min_alfa=min_alfa, max_alfa=max_alfa)
+
+    def update(self):
+        self.optimizer.alfa = self.min_alfa + (self.max_alfa - self.min_alfa) * (1 + np.cos(np.pi * self.t / self.T)) / 2
+        
+class LR_decay(Scheduler):
+    def __init__(self, optimizer, decay_rate, interval):
+        super().__init__(optimizer, decay_rate=decay_rate, interval=interval)
+
+    def update(self):
+        if self.t % self.interval == 0:
+            self.optimizer.alfa *= self.decay_rate
