@@ -27,14 +27,14 @@ class BCE(Loss):
         
     def backward(self):
         return (self.x_pred - self.x_true) / (self.x_pred * (1 - self.x_pred))
-    
-class CCE(Loss):
+        
+class CCE(Loss):   
     def forward(self, x_pred, x_true):
-        self.x_pred = x_pred
+        exp = np.exp(x_pred - np.max(x_pred, axis=2, keepdims=True))
+        self.prob = exp / np.sum(exp, axis=2, keepdims=True)
         self.x_true = x_true
-        x_pred = np.clip(x_pred, 1e-10, 1 - 1e-10)
-        self.loss = - np.sum(x_true * np.log(x_pred))
-        return self.loss
-    
+        loss = -np.sum(x_true * np.log(self.prob + 1e-15)) / x_pred.shape[0]
+        return loss
+
     def backward(self):
-        return (self.x_pred - self.x_true) / (self.x_pred * (1 - self.x_pred))
+        return self.prob - self.x_true
