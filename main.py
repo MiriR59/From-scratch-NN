@@ -1,7 +1,7 @@
 import numpy as np
 from Losses import BCE, MSE, CCE
 from Activations import ReLU, sigmoid, SiLU, tanh
-from Layers import Dense, Embedding, He, Random, Xavier
+from Layers import Dense, Embedding, PositionalEmbedding, Embedding_block, He, Random, Xavier
 from Network import Neural_network, L2, Null
 from Optimization import ADAM, gradient_descent, LR_cosine_annealing, LR_decay, LR_exponential
 from Tokenizer import tokenizer
@@ -24,17 +24,6 @@ hidden_2 = Dense(10, 10, sigmoid(), He(), 'normal')
 output_layer = Dense(10, 1, sigmoid(), He(), 'normal')
 
 nn = Neural_network(loss_f, optimizer, hidden_1, hidden_2, output_layer)
-
-# --- LM test loop ---
-lay_1 = Embedding(27, 16)
-lay_2 = Dense(16, 32, sigmoid(), He(), 'normal')
-nn_embed = Neural_network(loss_f, optimizer, lay_1, lay_2)
-tokenize = tokenizer()
-sentence = 'hello'
-
-ID = tokenize.encoder(sentence)
-prediction = nn_embed.forward_pass(ID)
-
 
 losses = []
 for epoch in range(epochs):
