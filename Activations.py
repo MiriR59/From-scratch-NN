@@ -39,3 +39,10 @@ class tanh(Activation):
     
     def backward(self):
         return 1 - self.out ** 2
+    
+class one(Activation):
+    def forward(self, x):
+        return x
+    
+    def backward(self):
+        return 1
