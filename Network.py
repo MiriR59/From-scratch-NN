@@ -17,15 +17,15 @@ class Neural_network:
         self.x_pred = x_pred
         self.x_true = x_true
         return self.loss_f.forward(self.x_pred, self.x_true) + self.regularization.forward(self.layers)
-    
+
     def backpropagation(self):
         self.delta = self.loss_f.backward()
         for i in range(len(self.layers) - 1, -1, -1):
             if i == len(self.layers) - 1:
-                self.layers[i].backward(np.ones((self.delta.shape[1], self.delta.shape[1])), self.delta, self.regularization)
+                self.layers[i].backward(self.delta, regularization=self.regularization)
                 
             else:
-                self.layers[i].backward(self.layers[i+1].w, self.layers[i+1].delta, self.regularization)
+                self.layers[i].backward(self.layers[i+1].delta, self.layers[i+1].w, regularization=self.regularization)
 
     def optimize(self):
         self.optimizer.optimize(self.layers)
